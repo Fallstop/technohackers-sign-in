@@ -10,14 +10,25 @@ import config
 
 listOfNames = []
 app = Flask(__name__, template_folder='HtmlPages/')
+app.config['DEBUG'] = True
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 @app.route('/', methods=['GET'])
 def home():
     return render_template("home.html")
 
 @app.route('/getnames', methods=['GET'])
-def getnames():
+def getNames():
     return jsonify(listOfNames)
+
+@app.route('/signin',methods=['POST'])
+def signIn():
+    print("Data: ",request.json)
+    formData = json.loads(request.data)
+    personName = formData["Name"]
+    signedUp = formData["SignedUp"]
+    print("Form values:",(personName,signedUp))
+    return ("",200)
 
 def downloadNames():
     parsed = []
@@ -51,7 +62,7 @@ def downloadNames():
         service = build('sheets', 'v4', credentials=creds)
         # Call the Sheets API
         sheet = service.spreadsheets()
-        result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,range=config.nameListSheet.RANGE_NAME).execute()["values"]
+        result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,range=RangeName).execute()["values"]
         parsed = []
         for name in result: parsed.append(name[0])
     except Exception:
@@ -64,6 +75,3 @@ def downloadNames():
 
 print("Getting names from the Google Sheet")
 listOfNames = downloadNames()
-app.config['DEBUG'] = True
-app.config['TEMPLATES_AUTO_RELOAD'] = True
-app.run()

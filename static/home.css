@@ -3,19 +3,28 @@
     margin:4em;
 }
 .search-results-container {
-    margin: 4em;
+    margin: 1em 10em;
 }
 .person {
     background-color: rgba(50, 50, 50, 1);
     border: 2px solid rgb(100, 100, 100);
     border-left-style: none;
     border-right-style: none;
+    border-radius: 10px;
+    margin-bottom: 0.5em;
     color: rgb(247, 247, 247);
     vertical-align: middle;
     display:flex;
     align-items:center;
     padding: 0.5em;
     padding-left: 1em;
+    transition: all 150ms linear;
+    cursor: pointer;
+}
+
+.person:hover {
+  background-color: rgba(80,80,80,1);
+  transition: all 150ms linear;
 }
 .lds-roller {
     

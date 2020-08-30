@@ -8,31 +8,63 @@
     <title>Technohackers Sign In</title>
     <link href="{{ url_for('static', filename='ico/favicon.ico') }}" rel="shortcut icon">
     <link href="{{ url_for('static', filename='home.css')}}" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha512-MoRNloxbStBcD8z3M/2BmnT+rg4IsMxPkXaGh2zD6LGNNFE80W3onsAhRcMAMrSoyWL9xD7Ert0men7vR8LUZg==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha512-MoRNloxbStBcD8z3M/2BmnT+rg4IsMxPkXaGh2zD6LGNNFE80W3onsAhRcMAMrSoyWL9xD7Ert0men7vR8LUZg=="
+        crossorigin="anonymous" />
 </head>
 
 <body>
     <div id="search">
         <label for="search-input">Start by typing your name</label>
-        <input id="search-input" name="fuzzy input" type="text" class="form-control">
+        <input id="search-input" name="fuzzy input" type="text" class="form-control" tabindex="1">
     </div>
-    <div class="d-flex flex-column"><div id="loading_icon" class="lds-roller align-self-center"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+    <div class="d-flex flex-column">
+        <div id="loading_icon" class="lds-roller align-self-center">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
     <div class="search-results-container d-flex flex-column" id="search-results-container">
-        
+
         <!-- <div class="person">
-            Yellow
+            Wow, a person's name would be here...
         </div> -->
     </div>
-    
-    <footer style="position: absolute; bottom: 0; width: 100%;">
-        <div class="container d-flex flex-row flex-auto" style="justify-content:center">
-            <a class="col-4 text-muted" href="https://github.com/Fallstop/technohackers-sign-in/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc">Contact me</a>
-            <a class="col-4 text-muted" href="https://github.com/Fallstop/technohackers-sign-in">Github</a>
+    <div class="modal" tabindex="-1" role="dialog" id="guestSignInModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Guest Sign In</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cancel">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <label for="guest-name-input">Please enter your full name</label>
+                    <input id="guest-name-input" name="guest-name-input" type="text" class="form-control">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="guestSignIn();" >Sign in as guest</button>
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
         </div>
-    </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.4.4/umd/popper.min.js" integrity="sha512-eUQ9hGdLjBjY3F41CScH3UX+4JDSI9zXeroz7hJ+RteoCaY+GP/LDoM8AO+Pt+DRFw3nXqsjh9Zsts8hnYv8/A==" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha512-M5KW3ztuIICmVIhjSqXe01oV2bpe248gOxqmlcYrEzAvws7Pw3z6BK0iGbrwvdrUQUhi3eXgtxp5I8PDo9YfjQ==" crossorigin="anonymous"></script>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"
+        integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg=="
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.4.4/umd/popper.min.js"
+        integrity="sha512-eUQ9hGdLjBjY3F41CScH3UX+4JDSI9zXeroz7hJ+RteoCaY+GP/LDoM8AO+Pt+DRFw3nXqsjh9Zsts8hnYv8/A=="
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha512-M5KW3ztuIICmVIhjSqXe01oV2bpe248gOxqmlcYrEzAvws7Pw3z6BK0iGbrwvdrUQUhi3eXgtxp5I8PDo9YfjQ=="
+        crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.js"></script>
     <script src="{{ url_for('static', filename='home.js') }}"></script>
 </body>
