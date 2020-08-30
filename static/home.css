@@ -5,6 +5,9 @@
 .search-results-container {
     margin: 1em 10em;
 }
+.modal {
+  transition: all 150ms linear;
+}
 .person {
     background-color: rgba(50, 50, 50, 1);
     border: 2px solid rgb(100, 100, 100);

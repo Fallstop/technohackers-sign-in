@@ -45,7 +45,7 @@ function signInPerson(nameOfPerson,signedUp){
             $('#search-input').focus();
         },
         error: function(response){
-            alert("Failed to send to server, response: "+response);
+            alert("Failed to send to server, response: "+response.status);
         }
     })
 }

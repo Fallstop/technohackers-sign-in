@@ -1,10 +1,14 @@
 from flask import *
 import time
+import datetime
 import pickle
 import os.path
+
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+
+import pymysql
 
 import config
 
@@ -12,6 +16,15 @@ listOfNames = []
 app = Flask(__name__, template_folder='HtmlPages/')
 app.config['DEBUG'] = True
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+# Connection info for database
+connection = pymysql.connect(
+    host=config.sqlServer.host,
+    user=config.sqlServer.user,
+    password=config.sqlServer.password,
+    port=config.sqlServer.port,
+    database=config.sqlServer.database,
+)
 
 @app.route('/', methods=['GET'])
 def home():
@@ -27,8 +40,33 @@ def signIn():
     formData = json.loads(request.data)
     personName = formData["Name"]
     signedUp = formData["SignedUp"]
-    print("Form values:",(personName,signedUp))
-    return ("",200)
+
+    #Backup sign in to csv
+    if (os.path.exists(config.backupCSV.fileName)):
+        backUpCSVFile = open(config.backupCSV.fileName,'a')
+    else:
+        backUpCSVFile = open(config.backupCSV.fileName,'w')
+    backUpCSVFile.write("\n"+formData["Name"]+","+str(formData["SignedUp"])+","+datetime.datetime.now().isoformat())
+    backUpCSVFile.close()
+    print("Form values:",(personName,signedUp,datetime.datetime.now().isoformat()))
+    if post_attendance(formData["Name"],formData["SignedUp"]):
+        return ("",200)
+    else:
+        return ("",400)
+
+
+def post_attendance(full_name,registered):
+    global connection
+    connection.ping(reconnect=True)
+    cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
+    query = "insert into qrl_membership_db.attendance_record (full_name, registered) values (%s,%s);"
+    try:
+        cursor.execute(query, (full_name, registered))
+        connection.commit()
+        return True
+    except Exception as e:
+        print("Attendance Insert failed, Error:", e)
+        return False
 
 def downloadNames():
     parsed = []
@@ -36,17 +74,17 @@ def downloadNames():
         #############
         #SETUP
         #############
-        SCOPES = config.nameListSheet.SCOPES
-        SPREADSHEET_ID = config.nameListSheet.SPREADSHEET_ID
+        SCOPES = config.nameListSheet.scopes
+        SPREADSHEET_ID = config.nameListSheet.spreadsheet_id
 
-        RangeName = config.nameListSheet.RANGE_NAME
+        RangeName = config.nameListSheet.range_name
         creds = None
 
         # The file token.pickle stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        if os.path.exists(config.nameListSheet.PICKLE_NAME):
-            with open(config.nameListSheet.PICKLE_NAME, 'rb') as token:
+        if os.path.exists(config.nameListSheet.pickle_name):
+            with open(config.nameListSheet.pickle_name, 'rb') as token:
                 creds = pickle.load(token)
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
@@ -54,10 +92,10 @@ def downloadNames():
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    config.nameListSheet.CREDENTIALS_NAME, SCOPES)
+                    config.nameListSheet.credentials_name, SCOPES)
                 creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open(config.nameListSheet.PICKLE_NAME, 'wb') as token:
+            with open(config.nameListSheet.pickle_name, 'wb') as token:
                 pickle.dump(creds, token)
         service = build('sheets', 'v4', credentials=creds)
         # Call the Sheets API
