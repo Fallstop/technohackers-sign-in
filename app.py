@@ -24,6 +24,7 @@ connection = pymysql.connect(
     password=config.sqlServer.password,
     port=config.sqlServer.port,
     database=config.sqlServer.database,
+    client_flag= pymysql.constants.CLIENT.MULTI_STATEMENTS,
 )
 
 @app.route('/', methods=['GET'])
@@ -49,13 +50,19 @@ def signIn():
     backUpCSVFile.write("\n"+formData["Name"]+","+str(formData["SignedUp"])+","+datetime.datetime.now().isoformat())
     backUpCSVFile.close()
     print("Form values:",(personName,signedUp,datetime.datetime.now().isoformat()))
-    if post_attendance(formData["Name"],formData["SignedUp"]):
-        return ("",200)
+    attendance_id = sql_insert_attendance(formData["Name"],formData["SignedUp"])
+    if attendance_id != False:
+        return (attendance_id,200)
     else:
         return ("",400)
 
+@app.route('/undo', methods=['DELETE'])
+def undo_attendance():
+    print("Data: ",request.json)
+    formData = json.loads(request.data)
+    attendance_id = formData["id"]
 
-def post_attendance(full_name,registered):
+def sql_delete_attendance(full_name,registered):
     global connection
     connection.ping(reconnect=True)
     cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
@@ -67,6 +74,23 @@ def post_attendance(full_name,registered):
     except Exception as e:
         print("Attendance Insert failed, Error:", e)
         return False
+
+def sql_insert_attendance(full_name,registered):
+    global connection
+    connection.ping(reconnect=True)
+    cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
+    query = "insert into qrl_membership_db.attendance_record (full_name, registered) values (%s,%s)"
+    
+    try:
+        cursor.execute(query, (full_name, registered))
+        connection.commit()
+        id = cursor.lastrowid
+        print("Attendance:",id)
+        return str(id)
+    except Exception as e:
+        print("Attendance Insert failed, Error:", e)
+        return False
+
 
 def downloadNames():
     parsed = []

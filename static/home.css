@@ -29,6 +29,16 @@
   background-color: rgba(80,80,80,1);
   transition: all 150ms linear;
 }
+
+.undo-btn {
+  position:fixed;
+  bottom: 1em;
+  right: 1em;
+}
+.undo-btn:hover {
+
+}
+
 .lds-roller {
     
     position: relative;

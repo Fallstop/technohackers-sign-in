@@ -20,6 +20,7 @@ function loadNames() {
         }
     });
 }
+var rollbackList = [];
 
 function displayNames(namesToDisplay) {
     console.log("displaying names")
@@ -43,6 +44,8 @@ function signInPerson(nameOfPerson,signedUp){
             $("#search-input").val("");
             $('#search-results-container').html("");
             $('#search-input').focus();
+            rollbackList.push(response);
+            console.log(rollbackList)
         },
         error: function(response){
             alert("Failed to send to server, response: "+response.status);
