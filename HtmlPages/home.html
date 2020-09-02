@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css"
         integrity="sha512-MoRNloxbStBcD8z3M/2BmnT+rg4IsMxPkXaGh2zD6LGNNFE80W3onsAhRcMAMrSoyWL9xD7Ert0men7vR8LUZg=="
         crossorigin="anonymous" />
+    <link rel="icon" 
+        type="image/png" 
+        href="static/QRL.png">
 </head>
 
 <body>
@@ -37,7 +40,7 @@
     </div> -->
     </div>
 
-    <button class="undo-btn btn btn-lg btn-outline-primary" onclick="">
+    <button class="undo-btn btn btn-lg btn-outline-primary" onclick="undoSignIn()">
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-counterclockwise" fill="currentColor"
             xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z" />
@@ -46,6 +49,12 @@
         </svg>
         Undo
     </button>
+    <div class="alert alert-success alert-dismissible fade" role="alert" id="undo_notify">
+        <strong>Undid: <span id="undo_notify_name"></span></strong> sign in.
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
 
     <div class="modal" tabindex="-1" role="dialog" id="guestSignInModal">
         <div class="modal-dialog" role="document">
@@ -60,11 +69,32 @@
                     <label for="guest-name-input">Please enter your full name</label>
                     <input id="guest-name-input" name="guest-name-input" type="text" class="form-control">
                     <div style="margin-top: 2em" class="text-muted">
-                        PS: Please sign up ASAP! You can find the form at:<br><i>technohackers.org/membership/</i>
+                        PS: Please sign up, you can find the form at:<br><i>technohackers.org/membership/</i>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" onclick="guestSignIn();">Sign in as guest</button>
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" tabindex="-1" role="dialog" id="repeatAttendPersonDetails">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">You have already signed in today</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cancel">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <span>Are you sure you want to sign in again? You already signed in today at <span id="repeatAttendPersonDetails-time">Fuck-O-Clock</span>.</span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="repeatAttendPersonSend" class="btn btn-primary" onclick="repeatAttendSignIn()">
+                            Continue anyway
+                    </button>
                     <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
                 </div>
             </div>
@@ -80,6 +110,7 @@
         integrity="sha512-M5KW3ztuIICmVIhjSqXe01oV2bpe248gOxqmlcYrEzAvws7Pw3z6BK0iGbrwvdrUQUhi3eXgtxp5I8PDo9YfjQ=="
         crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.js"></script>
+    <script src="{{ url_for('static', filename='bootstrap-notify.min.js') }}"></script>
     <script src="{{ url_for('static', filename='home.js') }}"></script>
 </body>
 
