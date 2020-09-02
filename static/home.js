@@ -6,17 +6,18 @@ const options = {
 var repeatAttendPersonDetails;
 
 var fuse;
+
 function loadNames() {
     $.ajax({
         url: '/getnames',
         type: 'GET',
-        success: function (response) {
+        success: function(response) {
             console.log(response);
             nameList = response;
             fuse = new Fuse(response, options);
             $('#loading_icon').hide();
         },
-        error: function (response) {
+        error: function(response) {
             $.notify({
                 // options
                 message: "Failed to get list of names from server, response: " + response.status + "<br>Trying again in 2s."
@@ -51,12 +52,12 @@ function signInPerson(nameOfPerson, signedUp, force) {
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),
-        success: function (response) {
+        success: function(response) {
             console.log("Response: ", response);
             if (response["attendance_warning"]) {
                 repeatAttendPersonDetails = response
                 repeatAttendPersonDetails["signedUp"] = signedUp;
-                $("#repeatAttendPersonDetails-time").html("<strong>"+repeatAttendPersonDetails["previous_time"]+"</strong>");
+                $("#repeatAttendPersonDetails-time").html("<strong>" + repeatAttendPersonDetails["previous_time"] + "</strong>");
                 $("#repeatAttendPersonDetails").modal('show');
             } else {
                 $("#search-input").val("");
@@ -76,7 +77,7 @@ function signInPerson(nameOfPerson, signedUp, force) {
             }
 
         },
-        error: function (response) {
+        error: function(response) {
             $.notify({
                 // options
                 message: "Failed to send sign in to server, response: " + response.status
@@ -100,7 +101,7 @@ function repeatAttendSignIn() {
     console.log('Signing in with force from modal');
     $('#repeatAttendPersonDetails').modal('hide');
     $('#repeatAttendPersonSend').html('Continue anyway');
-    
+
 }
 
 function triggerGuestSignIn() {
@@ -109,6 +110,7 @@ function triggerGuestSignIn() {
     $("#guest-name-input").val($('#search-input').val());
     $("#guest-name-input").focus();
 }
+
 function undoSignIn() {
     if (rollbackList.length > 0) {
         userToUndo = rollbackList[rollbackList.length - 1];
@@ -118,7 +120,7 @@ function undoSignIn() {
             type: 'DELETE',
             contentType: 'application/json',
             data: JSON.stringify({ "id": userToUndo[0] }),
-            success: function (response) {
+            success: function(response) {
                 $.notify({
                     // options
                     message: 'Canceled attendance of <strong>' + userToUndo[1] + '</strong>'
@@ -129,7 +131,7 @@ function undoSignIn() {
                 });
                 rollbackList.pop();
             },
-            error: function (response) {
+            error: function(response) {
                 $.notify({
                     // options
                     message: "Failed to undo sign in to server, response: " + response.status
@@ -153,11 +155,11 @@ function undoSignIn() {
 
 }
 
-$(document).ready(function () {
+$(document).ready(function() {
     $("#search-input").val("");
     $('#search-input').focus();
     loadNames();
-    $('#search-input').keyup(function (e) {
+    $('#search-input').keyup(function(e) {
         console.log(e);
         if (e.code != "Enter") {
             console.log($('#search-input').val());
@@ -176,16 +178,25 @@ $(document).ready(function () {
             }
         }
     });
-    $('#guest-name-input').keyup(function (e) {
+    $('#guest-name-input').keyup(function(e) {
         if (e.code == 'Enter') {
             guestSignIn();
         }
     })
-    $(document).on('click', '.person', function (event) {
+    $(document).on('click', '.person', function(event) {
         if (this.id != "guest") {
             signInPerson(this.id.substring(7), true, false);
         } else {
             triggerGuestSignIn();
+        }
+    });
+    $(document).on('keypress', '.person', function(e) {
+        if (e.code == "Enter") {
+            if (this.id != "guest") {
+                signInPerson(this.id.substring(7), true, false);
+            } else {
+                triggerGuestSignIn();
+            }
         }
 
     });
