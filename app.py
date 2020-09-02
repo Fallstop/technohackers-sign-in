@@ -116,7 +116,7 @@ def check_attendance(full_name):
             return {
                 "id": result["attendance_id"],
                 "full_name": result["full_name"],
-                "previous_time": result["arrival_time"].strftime("%-I:%M %p"),
+                "previous_time": result["arrival_time"].strftime("%I:%M %p"),
                 "attendance_warning": True
             }
         else:
