@@ -158,9 +158,12 @@ def downloadYouthNames():
         sheet = service.spreadsheets()
         result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,range=RangeName).execute()["values"]
         parsed = []
-        for name in result: parsed.append(name[0])
-    except Exception:
-        print("Failed to get google sheet, trying again in 5 seconds")
+        print(result)
+        for name in result: 
+            if len(name) > 0: 
+                parsed.append(name[0])
+    except Exception as e:
+        print("Failed to get google sheet, trying again in 5 seconds, error:",e)
         time.sleep(5)
         downloadYouthNames()
     return parsed
@@ -199,7 +202,9 @@ def downloadFacilitatorsNames():
         sheet = service.spreadsheets()
         result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,range=RangeName).execute()["values"]
         parsed = []
-        for name in result: parsed.append(name[0])
+        for name in result: 
+            if len(name) > 0: 
+                parsed.append(name[0])
     except Exception:
         print("Failed to get google sheet, trying again in 5 seconds")
         time.sleep(5)

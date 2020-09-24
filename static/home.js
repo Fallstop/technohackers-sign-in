@@ -5,8 +5,16 @@ const options = {
 }
 var repeatAttendPersonDetails;
 
+var timeoutDelay = 60000;
+
+var timeoutID = window.setTimeout(clearScreen,timeoutDelay);
+
 var fuse;
 
+function restartTimer() {
+    window.clearTimeout(timeoutID);
+    timeoutID = window.setTimeout(clearScreen, timeoutDelay);
+}
 function loadNames() {
     $.ajax({
         url: '/getnames',
@@ -60,9 +68,7 @@ function signInPerson(nameOfPerson, signedUp, force) {
                 $("#repeatAttendPersonDetails-time").html("<strong>" + repeatAttendPersonDetails["previous_time"] + "</strong>");
                 $("#repeatAttendPersonDetails").modal('show');
             } else {
-                $("#search-input").val("");
-                $('#search-results-container').html("");
-                $('#search-input').focus();
+                clearScreen()
                 rollbackList.push([response["id"], nameOfPerson]);
                 console.log(rollbackList)
                 $.notify({
@@ -109,6 +115,16 @@ function triggerGuestSignIn() {
     $("#guestSignInModal").modal('show');
     $("#guest-name-input").val($('#search-input').val());
     $("#guest-name-input").focus();
+}
+
+function clearScreen() {
+    console.log("Timer ran out")
+    if ($("#search-input").val() != "") {
+        $("#search-input").val("");
+        $('#search-results-container').html("");
+    }
+    $('#search-input').focus();
+    restartTimer();
 }
 
 function undoSignIn() {
@@ -200,5 +216,7 @@ $(document).ready(function() {
         }
 
     });
+
+    $(document).on('click keypress',restartTimer);
 
 })
