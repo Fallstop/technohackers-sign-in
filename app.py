@@ -33,6 +33,12 @@ def home():
 
 @app.route('/getnames', methods=['GET'])
 def getNames():
+    print("Getting names from the Google Sheet")
+    print("Downloading youth names...")
+    listOfNames = downloadYouthNames()
+    print("Downloading facilitator names...")
+    listOfNames += downloadFacilitatorsNames()
+    print("Name retrival complete.")
     return jsonify(listOfNames)
 
 @app.route('/signin',methods=['POST'])
@@ -211,11 +217,3 @@ def downloadFacilitatorsNames():
         downloadFacilitatorsNames()
     return parsed
 
-
-
-print("Getting names from the Google Sheet")
-print("Downloading youth names...")
-listOfNames = downloadYouthNames()
-print("Downloading facilitator names...")
-listOfNames += downloadFacilitatorsNames()
-print("Name retrival complete.")
