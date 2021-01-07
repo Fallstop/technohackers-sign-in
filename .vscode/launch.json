@@ -6,7 +6,7 @@
             "type": "python",
             "request": "launch",
             "stopOnEntry": false,
-            "pythonPath": "${config:python.pythonPath}",
+            "python": "${command:python.interpreterPath}",
             "program": "${workspaceRoot}/app.py",
             "env": {
                 "FLASK_APP": "${workspaceRoot}/app.py"

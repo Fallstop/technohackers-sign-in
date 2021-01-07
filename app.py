@@ -259,6 +259,11 @@ def check_attendance(full_name):
         result = cursor.fetchone()
         print("Check attendance result:",result)
         if result is not None:
+            seconds_since_midnight = (datetime.datetime.now() - datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+            seconds_since_midnight_arrival = (result["arrival_time"] - result["arrival_time"].replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+            if seconds_since_midnight < seconds_since_midnight_arrival:
+                # Impossible situation, stops the un-needed warnings here
+                return False
             return {
                 "id": result["attendance_id"],
                 "full_name": result["full_name"],
