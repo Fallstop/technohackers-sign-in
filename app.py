@@ -1,8 +1,13 @@
 from flask import *
+
 import time
 import datetime
 import pickle
 import os.path
+import jsonschema
+import random
+import uuid
+
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -76,6 +81,22 @@ def undo_attendance():
     else:
         return ("",400)
 
+@app.route('/argolia/create-account',methods=['POST'])
+def argolia_create_account():
+    accountInfo = validateJson(
+        request.data,
+        {
+            "username": {"type":"string"},
+            "full_name": {"type":"string"}
+        }   
+    )
+    if accountInfo:
+        pin = format('06d',random.randrange(0,999999))
+        access_token = str(uuid.uuid4())
+        return sql_argolia_create_account(accountInfo["full_name"],accountInfo["username"],pin,access_token)
+    else:
+        return ("Invalid Json {}".format(request.data),400)
+
 def sql_delete_attendance(id):
     global connection
     connection.ping(reconnect=True)
@@ -107,6 +128,25 @@ def sql_insert_attendance(full_name,registered):
     except Exception as e:
         print("Attendance Insert failed, Error:", e)
         return False
+
+def sql_argolia_create_account(full_name,username,pin,access_token):
+    global connection
+    connection.ping(reconnect=True)
+    cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
+    query = "insert into qrl_membership_db.argolia_accounts (full_name, minecraft_username, minecraft_pin, access_token) values (%s,%s,%s,%s)"
+    
+    try:
+        cursor.execute(query, (full_name, username, pin, access_token))
+        connection.commit()
+        id = cursor.lastrowid
+        print("Account ID:",id)
+        return (
+            json.dump({"pin":pin}),
+            200
+        )
+    except Exception as e:
+        print("Account Insert failed, Error:", e)
+        return ("Failed to create account",500)
 
 def check_attendance(full_name):
     global connection
@@ -217,3 +257,10 @@ def downloadFacilitatorsNames():
         downloadFacilitatorsNames()
     return parsed
 
+def validateJson(jsonSting,Schema):
+    jsonData = json.loads(jsonSting)
+    try:
+        jsonschema.validate(instance=jsonData, schema=Schema)
+    except jsonschema.exceptions.ValidationError as err:
+        return False
+    return jsonData
