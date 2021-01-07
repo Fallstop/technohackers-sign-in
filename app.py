@@ -48,12 +48,12 @@ def home():
 
 @app.route('/getnames', methods=['GET'])
 def getNames():
-    print("Getting names from the Google Sheet")
-    print("Downloading youth names...")
-    listOfNames = downloadYouthNames()
-    print("Downloading facilitator names...")
-    listOfNames += downloadFacilitatorsNames()
-    print("Name retrival complete.")
+    # print("Getting names from the Google Sheet")
+    # print("Downloading youth names...")
+    # listOfNames = downloadYouthNames()
+    # print("Downloading facilitator names...")
+    # listOfNames += downloadFacilitatorsNames()
+    # print("Name retrival complete.")
     return jsonify(listOfNames)
 
 @app.route('/signin',methods=['POST'])
@@ -71,11 +71,12 @@ def signIn():
     backUpCSVFile.write("\n"+formData["Name"]+","+str(formData["SignedUp"])+","+datetime.datetime.now().isoformat())
     backUpCSVFile.close()
     print("Form values:",(personName,signedUp,datetime.datetime.now().isoformat()))
-    attendedToday =  False if formData["Force"] else check_attendance(personName)
-    if attendedToday != False:
-        print("Person allready attended")
-        return (jsonify(attendedToday),200)
-    attendanceId = sql_insert_attendance(formData["Name"],formData["SignedUp"])
+    # attendedToday =  False if formData["Force"] else check_attendance(personName)
+    # if attendedToday != False:
+    #     print("Person allready attended")
+    #     return (jsonify(attendedToday),200)
+    # attendanceId = sql_insert_attendance(formData["Name"],formData["SignedUp"])
+    attendanceId = 3
     if attendanceId != False:
         return (jsonify(attendanceId),200)
     else:
@@ -362,6 +363,12 @@ def downloadFacilitatorsNames():
         downloadFacilitatorsNames()
     return parsed
 
+print("Getting names from the Google Sheet")
+print("Downloading youth names...")
+listOfNames = downloadYouthNames()
+print("Downloading facilitator names...")
+listOfNames += downloadFacilitatorsNames()
+print("Name retrival complete.")
 
-
-app.run(port=5000)
+if __name__ == "__main__":
+    app.run(port=5000)

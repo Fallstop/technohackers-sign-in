@@ -68,18 +68,14 @@ function signInPerson(nameOfPerson, signedUp, force) {
                 $("#repeatAttendPersonDetails-time").html("<strong>" + repeatAttendPersonDetails["previous_time"] + "</strong>");
                 $("#repeatAttendPersonDetails").modal('show');
             } else {
+                
+                // Special Argolia Stuff
+                $("#askArgolia").modal('show');
+                console.log($("#askArgolia"));
                 clearScreen()
                 rollbackList.push([response["id"], nameOfPerson]);
                 console.log(rollbackList)
-                $.notify({
-                    // options
-                    message: 'Signed in as <strong>' + nameOfPerson + '</strong>'
-                }, {
-                    // settings
-                    type: 'success',
-                    delay: 1000
-
-                });
+                
             }
 
         },
@@ -127,6 +123,27 @@ function clearScreen() {
     restartTimer();
 }
 
+function checkArgolia() {
+    console.log($("#attendingArgoliaCheckBox")[0])
+    if ($("#attendingArgoliaCheckBox")[0].checked) {
+        $("#askArgolia").hide();
+        $("#askArgoliaUsername").show();
+    } else {
+        $.notify({
+            // options
+            message: 'Signed in as <strong>' + nameOfPerson + '</strong>'
+        }, {
+            // settings
+            type: 'success',
+            delay: 1000
+        });
+    }
+}
+
+function submitArgoliaUsername() {
+    $("#askArgoliaUsername").modal('hide');
+}
+
 function undoSignIn() {
     if (rollbackList.length > 0) {
         userToUndo = rollbackList[rollbackList.length - 1];
@@ -172,6 +189,7 @@ function undoSignIn() {
 }
 
 $(document).ready(function() {
+    $("#askArgolia").modal('show');
     $("#search-input").val("");
     $('#search-input').focus();
     loadNames();
@@ -194,6 +212,14 @@ $(document).ready(function() {
             }
         }
     });
+    $("#attendingArgoliaCheckBox").change(function() {
+        if (this.checked) {
+            $("#argoliaNextButton").html("Next")
+            console.log("yhsauidj")
+        } else {
+            $("#argoliaNextButton").html("Finish")
+        }
+    })
     $('#guest-name-input').keyup(function(e) {
         if (e.code == 'Enter') {
             guestSignIn();

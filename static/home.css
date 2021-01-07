@@ -50,6 +50,12 @@
     right: 1em;
 }
 
+.ask-argolia-question {
+    display: inline-flex;
+    align-items: center;
+    padding-left: 1rem;
+}
+
 .lds-roller {
     position: relative;
     width: 80px;
