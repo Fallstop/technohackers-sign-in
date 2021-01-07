@@ -14,7 +14,7 @@ import config
 
 listOfNames = []
 app = Flask(__name__, template_folder='HtmlPages/')
-app.config['DEBUG'] = True
+# app.config['DEBUG'] = True
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 # Connection info for database
@@ -217,3 +217,4 @@ def downloadFacilitatorsNames():
         downloadFacilitatorsNames()
     return parsed
 
+app.run(port=5000)
