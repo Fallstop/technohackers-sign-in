@@ -32,6 +32,16 @@ connection = pymysql.connect(
     client_flag= pymysql.constants.CLIENT.MULTI_STATEMENTS,
 )
 
+def validateJson(jsonSting,Schema):
+    jsonData = jsonSting
+    try:
+        jsonschema.validate(instance=jsonData, schema=Schema)
+    except jsonschema.exceptions.ValidationError as err:
+        return False
+    return jsonData
+
+def generateAccessToken(): return str(uuid.uuid4())
+
 @app.route('/', methods=['GET'])
 def home():
     return render_template("home.html")
@@ -84,16 +94,57 @@ def undo_attendance():
 @app.route('/argolia/create-account',methods=['POST'])
 def argolia_create_account():
     accountInfo = validateJson(
-        request.data,
+        request.get_json(),
         {
             "username": {"type":"string"},
             "full_name": {"type":"string"}
         }   
     )
     if accountInfo:
-        pin = format('06d',random.randrange(0,999999))
-        access_token = str(uuid.uuid4())
+        pin = str(random.randrange(0,999999)).zfill(6) 
+        access_token = generateAccessToken()
         return sql_argolia_create_account(accountInfo["full_name"],accountInfo["username"],pin,access_token)
+    else:
+        return ("Invalid Json {}".format(request.data),400)
+
+@app.route('/argolia/check-username',methods=['POST'])
+def argolia_check_username():
+    username = validateJson(
+        request.get_json(),
+        {
+            "username": {"type":"string"}
+        }   
+    )
+    if username:
+        return sql_argolia_check_username(username["username"])
+    else:
+        return ("Invalid Json {}".format(request.data),400)
+
+@app.route('/argolia/update-token',methods=['POST'])
+def argolia_update_token():
+    data = validateJson(
+        request.get_json(),
+        {
+            "old-token": {"type":"string"},
+            "account-id":  {"type":"string"}
+        }   
+    )
+    if data:
+        return sql_argolia_update_token(data["old-token"],data["account-id"])
+    else:
+        return ("Invalid Json {}".format(request.data),400)
+
+@app.route('/argolia/sign-in',methods=['POST'])
+def argolia_sign_in():
+    creds = validateJson(
+        request.get_json(),
+        {
+            "username": {"type":"string"},
+            "pin": {"type":"string"},
+        }   
+    )
+    if creds:
+        return sql_argolia_sign_in(creds["username"],creds["pin"])
     else:
         return ("Invalid Json {}".format(request.data),400)
 
@@ -141,12 +192,61 @@ def sql_argolia_create_account(full_name,username,pin,access_token):
         id = cursor.lastrowid
         print("Account ID:",id)
         return (
-            json.dump({"pin":pin}),
+            json.dumps({"pin":pin}),
             200
         )
     except Exception as e:
         print("Account Insert failed, Error:", e)
         return ("Failed to create account",500)
+
+def sql_argolia_sign_in(username, pin):
+    global connection
+    connection.ping(reconnect=True)
+    cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
+    query = "select access_token,account_id from argolia_accounts where minecraft_username=%s and minecraft_pin=%s"
+    
+    try:
+        cursor.execute(query, (username,pin,))
+        result = cursor.fetchone()
+        print("Check attendance result:",result)
+        if result is not None:
+            return sql_argolia_update_token(result)
+    except Exception as e:
+        print("Attendance Insert failed, Error:", e)
+        return False
+
+def sql_argolia_update_token(old_token, account_id):
+    global connection
+    connection.ping(reconnect=True)
+    cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
+    query = "update argolia_accounts set access_token=%s where account_id=%s and access_token=%s;"
+    
+    try:
+        cursor.execute(query, (generateAccessToken(),account_id,old_token))
+        connection.commit()
+        if cursor.rowcount > 0:
+            return (json.dumps({"token":cursor.fetchone(),"success": True}),200)
+        else:
+            return (json.dumps({"success": False}),200)
+            
+    except Exception as e:
+        print("sql_argolia_update_token failed, Error:", e)
+        return (json.dumps({"success": False}),200)
+
+def sql_argolia_check_username(username):
+    global connection
+    connection.ping(reconnect=True)
+    cursor = connection.cursor()
+    query = "SELECT COUNT(minecraft_username) FROM argolia_accounts WHERE minecraft_username=%s;"
+    
+    try:
+        cursor.execute(query, (username,))
+        data = cursor.fetchone()[0]
+        return (json.dumps({"available":data==0,"success": True}),200)
+            
+    except Exception as e:
+        print("sql_argolia_check_username failed, Error:", e)
+        return (json.dumps({"success": False}),200)
 
 def check_attendance(full_name):
     global connection
@@ -257,11 +357,6 @@ def downloadFacilitatorsNames():
         downloadFacilitatorsNames()
     return parsed
 
-def validateJson(jsonSting,Schema):
-    jsonData = json.loads(jsonSting)
-    try:
-        jsonschema.validate(instance=jsonData, schema=Schema)
-    except jsonschema.exceptions.ValidationError as err:
-        return False
-    return jsonData
+
+
 app.run(port=5000)
