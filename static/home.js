@@ -1,4 +1,7 @@
 var nameList = [];
+var rollbackList = [];
+var currentlyProcessingName = ""
+
 const options = {
     includeScore: true,
     threshold: 0.3
@@ -39,7 +42,6 @@ function loadNames() {
         }
     });
 }
-var rollbackList = [];
 
 function displayNames(namesToDisplay) {
     console.log("displaying names")
@@ -52,6 +54,7 @@ function displayNames(namesToDisplay) {
 }
 
 function signInPerson(nameOfPerson, signedUp, force) {
+    currentlyProcessingName = nameOfPerson
     console.log("Signing in " + nameOfPerson);
     data = { "Name": nameOfPerson, "SignedUp": signedUp, "Force": force };
     console.log("Posting: ", data);
@@ -68,13 +71,12 @@ function signInPerson(nameOfPerson, signedUp, force) {
                 $("#repeatAttendPersonDetails-time").html("<strong>" + repeatAttendPersonDetails["previous_time"] + "</strong>");
                 $("#repeatAttendPersonDetails").modal('show');
             } else {
-                
+                rollbackList.push([response["id"], nameOfPerson]);
                 // Special Argolia Stuff
                 $("#askArgolia").modal('show');
+                $("#askArgolia").focus();
                 console.log($("#askArgolia"));
                 clearScreen()
-                rollbackList.push([response["id"], nameOfPerson]);
-                console.log(rollbackList)
                 
             }
 
@@ -126,22 +128,99 @@ function clearScreen() {
 function checkArgolia() {
     console.log($("#attendingArgoliaCheckBox")[0])
     if ($("#attendingArgoliaCheckBox")[0].checked) {
-        $("#askArgolia").hide();
-        $("#askArgoliaUsername").show();
+        $("#askArgolia").modal('hide')
+        $("#askArgoliaUsername").modal({
+            backdrop: 'static'
+          });
     } else {
-        $.notify({
-            // options
-            message: 'Signed in as <strong>' + nameOfPerson + '</strong>'
-        }, {
-            // settings
-            type: 'success',
-            delay: 1000
-        });
+        promptSuccessfulSignIn()
     }
 }
 
-function submitArgoliaUsername() {
+function checkUsernameAvailability(username) {
+    $.ajax({
+        url: "/argolia/check-username",
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            "username": username
+        }),
+        success: function(response) {
+            result = JSON.parse(response)
+            console.log(result["available"],result)
+            if (result["available"]){
+                $("#minecraftUsernameInput").addClass("is-valid")
+                $("#minecraftUsernameInput").removeClass("is-invalid")
+                $("#minecraftUsernameInput").val("")
+                createArgoliaAccount(username)
+            } else {
+                $("#minecraftUsernameInvalidHelp").html("Sorry, but that username has been taken!")
+                $("#minecraftUsernameInput").removeClass("is-valid")
+                $("#minecraftUsernameInput").addClass("is-invalid")
+            }
+                
+        }
+    })
+}
+
+function createArgoliaAccount(username) {
     $("#askArgoliaUsername").modal('hide');
+    console.log({
+        "username": username,
+        "full_name": currentlyProcessingName
+    });
+    $.ajax({
+        url: "/argolia/create-account",
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            "username": username,
+            "full_name": currentlyProcessingName
+        }),
+        success: function(response) {
+            promptSuccessfulSignIn()
+        },
+        error: function(response) {
+            console.log(response)
+            if (response.status == 500) {
+                $.notify({
+                    // options
+                    message: "Failed to create account, probably because you have already made an account"
+                }, {
+                    // settings
+                    type: 'danger',
+                    delay: 5000
+                });
+            } else {
+                $.notify({
+                    // options
+                    message: "Failed to create account, please contact a staff member, response: " + response.status
+                }, {
+                    // settings
+                    type: 'danger',
+                    delay: 5000
+                });
+            }
+        }
+    })
+}
+
+function submitArgoliaUsername() {
+    username = $("#minecraftUsernameInput").val();
+    if (!(username.length >= 3 && username.length <= 16)) {
+        console.log("Username not valid")
+        $("#minecraftUsernameInvalidHelp").html("Username is not valid. It has to be between 3-16 chars long.")
+        $("#minecraftUsernameInput").removeClass("is-valid")
+        $("#minecraftUsernameInput").addClass("is-invalid")
+    }
+    else if (!(/^[\d|\w]{3,16}$/.test(username))) {
+        console.log("Username not valid")
+        $("#minecraftUsernameInvalidHelp").html("Username is not valid. It has to only include a-Z,0-9 and '_'.")
+        $("#minecraftUsernameInput").removeClass("is-valid")
+        $("#minecraftUsernameInput").addClass("is-invalid")
+    } else {
+        checkUsernameAvailability(username)
+    }
 }
 
 function undoSignIn() {
@@ -189,7 +268,6 @@ function undoSignIn() {
 }
 
 $(document).ready(function() {
-    $("#askArgolia").modal('show');
     $("#search-input").val("");
     $('#search-input').focus();
     loadNames();
@@ -215,9 +293,19 @@ $(document).ready(function() {
     $("#attendingArgoliaCheckBox").change(function() {
         if (this.checked) {
             $("#argoliaNextButton").html("Next")
-            console.log("yhsauidj")
         } else {
             $("#argoliaNextButton").html("Finish")
+        }
+    });
+
+    $('#guest-name-input').keyup(function(e) {
+        if (e.code == 'Enter') {
+            guestSignIn();
+        }
+    })
+    $('#guest-name-input').keyup(function(e) {
+        if (e.code == 'Enter') {
+            guestSignIn();
         }
     })
     $('#guest-name-input').keyup(function(e) {
@@ -242,7 +330,31 @@ $(document).ready(function() {
         }
 
     });
+    $(document).on("keydown", "#argoliaUsernameForm", function(event) {
+        if (event.key == "Enter") {
+            submitArgoliaUsername()
+            return false;
+        }
+        return true;
+    });
+    $(document).on("keydown", "#askArgolia", function(event) {
+        if (event.key == "Enter") {
+            checkArgolia()
+        }
+    });
 
     $(document).on('click keypress',restartTimer);
 
 })
+
+function promptSuccessfulSignIn() {
+    console.log("Successful signin")
+    $.notify({
+        // options
+        message: 'Signed in as <strong>' + currentlyProcessingName + '</strong>'
+    }, {
+        // settings
+        type: 'success',
+        delay: 1000
+    });
+}

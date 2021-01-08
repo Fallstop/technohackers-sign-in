@@ -97,8 +97,15 @@ def argolia_create_account():
     accountInfo = validateJson(
         request.get_json(),
         {
-            "username": {"type":"string"},
-            "full_name": {"type":"string"}
+            "username": {
+                "type":"string",
+                "minLength": 3,
+                "maxLength": 16
+                },
+            "full_name": {
+                "type":"string"
+                },
+            "required": ["username","full_name"]
         }   
     )
     if accountInfo:
@@ -106,14 +113,16 @@ def argolia_create_account():
         access_token = generateAccessToken()
         return sql_argolia_create_account(accountInfo["full_name"],accountInfo["username"],pin,access_token)
     else:
-        return ("Invalid Json {}".format(request.data),400)
+        print("Invalid Json {}".format(request.get_json()))
+        return ("Invalid Json {}".format(request.get_json()),400)
 
 @app.route('/argolia/check-username',methods=['POST'])
 def argolia_check_username():
     username = validateJson(
         request.get_json(),
         {
-            "username": {"type":"string"}
+            "username": {"type":"string"},
+            "required": ["username"]
         }   
     )
     if username:
@@ -127,7 +136,8 @@ def argolia_update_token():
         request.get_json(),
         {
             "old-token": {"type":"string"},
-            "account-id":  {"type":"string"}
+            "account-id":  {"type":"string"},
+            "required": ["old-token","account-id"]
         }   
     )
     if data:

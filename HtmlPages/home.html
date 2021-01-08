@@ -94,7 +94,7 @@
             </div>
         </div>
     </div>
-    <div class="modal" tabindex="-1" role="dialog" id="askArgolia" data-backdrop="static">
+    <div class="modal" tabindex="-1" role="dialog" id="askArgolia">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -115,23 +115,25 @@
             </div>
         </div>
     </div>
-    <div class="modal" tabindex="-1" role="dialog" id="askArgoliaUsername" data-backdrop="static">
+    <div class="modal" tabindex="-1" role="dialog" id="askArgoliaUsername" >
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Argolia Account Creation</h5>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form class="needs-validation" novalidate id="argoliaUsernameForm">
                         <div class="form-group">
-                            <label for="exampleInputEmail1">Your chosen username</label>
-                            <input class="form-control" aria-label="Minecraft Username" />
-                            <small id="emailHelp" class="form-text text-muted">Use your actual minecraft username if you want your skin ingame.</small>
+                            <label for="Minecraft Username">Your chosen username</label>
+                            <input class="form-control" aria-label="Minecraft Username" id="minecraftUsernameInput" />
+                            <div class="invalid-feedback" id="minecraftUsernameInvalidHelp"></div>
+                            <div class="valid-feedback">Looks good!</div>
+                            <small id="usernameHelp" class="form-text text-muted">Use your actual minecraft username if you want your skin ingame.</small>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" id="repeatAttendPersonSend" class="btn btn-primary" onclick="submitArgoliaUsername()">
+                    <button type="button" id="submitArgoliaUsername" class="btn btn-primary" onclick="submitArgoliaUsername()">
                         Finish
                     </button>
                     <button type="button" class="btn btn-outline-secondary" data-dismiss="modal" onclick="undoSignIn()">Cancel</button>
