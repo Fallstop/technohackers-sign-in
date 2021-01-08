@@ -159,6 +159,22 @@ def argolia_sign_in():
     else:
         return ("Invalid Json {}".format(request.data),400)
 
+@app.route('/argolia/validate-access-token',methods=['POST'])
+def argolia_validate_access_token():
+    creds = validateJson(
+        request.get_json(),
+        {
+            "token": {"type":"string"},
+            "account-id":  {"type":"string"},
+            "required": ["old-token","account-id"]
+        }   
+    )
+    if creds:
+        return sql_argolia_validate_access_token(creds["token"],creds["account-id"])
+    else:
+        return ("Invalid Json {}".format(request.data),400)
+
+
 def sql_delete_attendance(id):
     global connection
     connection.ping(reconnect=True)
@@ -195,10 +211,10 @@ def sql_argolia_create_account(full_name,username,pin,access_token):
     global connection
     connection.ping(reconnect=True)
     cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
-    query = "insert into qrl_membership_db.argolia_accounts (full_name, minecraft_username, minecraft_pin, access_token) values (%s,%s,%s,%s)"
+    query = "insert into qrl_membership_db.argolia_accounts (account_id, full_name, minecraft_username, minecraft_pin, access_token) values (%s,%s,%s,%s,%s)"
     
     try:
-        cursor.execute(query, (full_name, username, pin, access_token))
+        cursor.execute(query, (get_uuid(username),full_name, username, pin, access_token))
         connection.commit()
         id = cursor.lastrowid
         print("Account ID:",id)
@@ -236,7 +252,7 @@ def sql_argolia_update_token(old_token, account_id):
         cursor.execute(query, (generateAccessToken(),account_id,old_token))
         connection.commit()
         if cursor.rowcount > 0:
-            return (json.dumps({"token":cursor.fetchone(),"success": True}),200)
+            return (json.dumps({"token":cursor.fetchone(),"account_id":account_id,"success": True}),200)
         else:
             return (json.dumps({"success": False}),200)
             
@@ -258,6 +274,22 @@ def sql_argolia_check_username(username):
     except Exception as e:
         print("sql_argolia_check_username failed, Error:", e)
         return (json.dumps({"success": False}),200)
+
+def sql_argolia_validate_access_token(account_id, access_token):
+    global connection
+    connection.ping(reconnect=True)
+    cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
+    query = "select access_token,account_id from argolia_accounts where account_id=%s and access_token=%s"
+    
+    try:
+        cursor.execute(query, (account_id,access_token,))
+        result = cursor.fetchone()
+        print("Check attendance result:",result)
+        if result is not None:
+            return sql_argolia_update_token(result)
+    except Exception as e:
+        print("Attendance Insert failed, Error:", e)
+        return False
 
 def check_attendance(full_name):
     global connection
@@ -286,6 +318,32 @@ def check_attendance(full_name):
     except Exception as e:
         print("Attendance Insert failed, Error:", e)
         return False
+
+def get_uuid(username):
+        """
+          Get the UUID of the player.
+          Parameters
+          ----------
+          username : Minecraft username
+        """
+
+        http_conn = http.client.HTTPSConnection("api.mojang.com");
+        http_conn.request("GET", "/users/profiles/minecraft/" + username,
+            headers={'User-Agent':'Minecraft Username -> UUID', 'Content-Type':'application/json'});
+        response = http_conn.getresponse().read().decode("utf-8")
+
+        if (not response): # No response & no timestamp
+            return uuid.uuid4()
+
+        json_data = json.loads(response)
+        try:
+            playerUuid = json_data['id']
+        except KeyError as e:
+            print("KeyError raised:", e)
+            playerUuid = uuid.uuid4()
+
+        return playerUuid
+
 def downloadYouthNames():
     parsed = []
     try:
