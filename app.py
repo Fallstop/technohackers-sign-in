@@ -7,6 +7,8 @@ import os.path
 import jsonschema
 import random
 import uuid
+import json
+import http
 
 
 from googleapiclient.discovery import build
@@ -71,12 +73,11 @@ def signIn():
     backUpCSVFile.write("\n"+formData["Name"]+","+str(formData["SignedUp"])+","+datetime.datetime.now().isoformat())
     backUpCSVFile.close()
     print("Form values:",(personName,signedUp,datetime.datetime.now().isoformat()))
-    # attendedToday =  False if formData["Force"] else check_attendance(personName)
-    # if attendedToday != False:
-    #     print("Person allready attended")
-    #     return (jsonify(attendedToday),200)
-    # attendanceId = sql_insert_attendance(formData["Name"],formData["SignedUp"])
-    attendanceId = 3
+    attendedToday =  False if formData["Force"] else check_attendance(personName)
+    if attendedToday != False:
+        print("Person allready attended")
+        return (jsonify(attendedToday),200)
+    attendanceId = sql_insert_attendance(formData["Name"],formData["SignedUp"])
     if attendanceId != False:
         return (jsonify(attendanceId),200)
     else:
@@ -85,7 +86,8 @@ def signIn():
 @app.route('/deleteattendance', methods=['DELETE'])
 def undo_attendance():
     print("Data: ",request.json)
-    formData = json.loads(request.data)
+    formData = request.get_json()
+    print(formData)
     attendanceId = formData["id"]
     if (sql_delete_attendance(attendanceId)):
         return ("",200)
@@ -109,9 +111,15 @@ def argolia_create_account():
         }   
     )
     if accountInfo:
-        pin = str(random.randrange(0,999999)).zfill(6) 
-        access_token = generateAccessToken()
-        return sql_argolia_create_account(accountInfo["full_name"],accountInfo["username"],pin,access_token)
+        checkUsernameAvailability = sql_argolia_check_username(accountInfo["username"])
+        if json.loads(checkUsernameAvailability[0])["available"]:
+            pin = str(random.randrange(0,999999)).zfill(6) 
+            access_token = generateAccessToken()
+            print("Creating new account with pin ",pin)
+            return sql_argolia_create_account(accountInfo["full_name"],accountInfo["username"],pin,access_token)
+        else:
+            print("Username Taken")
+            return ({"success":False,"error":"Username has already been taken"},200)
     else:
         print("Invalid Json {}".format(request.get_json()))
         return ("Invalid Json {}".format(request.get_json()),400)
@@ -130,8 +138,24 @@ def argolia_check_username():
     else:
         return ("Invalid Json {}".format(request.data),400)
 
+@app.route('/argolia/lookup-uuid',methods=['GET'])
+def argolia_lookup_uuid():
+    print(request.get_json())
+    acccountID = validateJson(
+        request.get_json(),
+        {
+            "account-id": {"type":"string"},
+            "required": ["account-id"]
+        }   
+    )
+    if acccountID:
+        return sql_argolia_lookup_uuid(acccountID["account-id"])
+    else:
+        return ("Invalid Json {}".format(request.data),400)
+
 @app.route('/argolia/update-token',methods=['POST'])
 def argolia_update_token():
+    print(request.get_json())
     data = validateJson(
         request.get_json(),
         {
@@ -152,6 +176,7 @@ def argolia_sign_in():
         {
             "username": {"type":"string"},
             "pin": {"type":"string"},
+            "required": ["username","pin"]
         }   
     )
     if creds:
@@ -166,7 +191,7 @@ def argolia_validate_access_token():
         {
             "token": {"type":"string"},
             "account-id":  {"type":"string"},
-            "required": ["old-token","account-id"]
+            "required": ["token","account-id"]
         }   
     )
     if creds:
@@ -176,6 +201,7 @@ def argolia_validate_access_token():
 
 
 def sql_delete_attendance(id):
+    print("id",id)
     global connection
     connection.ping(reconnect=True)
     cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
@@ -208,18 +234,23 @@ def sql_insert_attendance(full_name,registered):
         return False
 
 def sql_argolia_create_account(full_name,username,pin,access_token):
+    playerID = get_uuid(username)
+
     global connection
     connection.ping(reconnect=True)
     cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
     query = "insert into qrl_membership_db.argolia_accounts (account_id, full_name, minecraft_username, minecraft_pin, access_token) values (%s,%s,%s,%s,%s)"
     
     try:
-        cursor.execute(query, (get_uuid(username),full_name, username, pin, access_token))
+        cursor.execute(query, (playerID,full_name, username, pin, access_token))
         connection.commit()
         id = cursor.lastrowid
         print("Account ID:",id)
         return (
-            json.dumps({"pin":pin}),
+            json.dumps({
+                "pin": pin,
+                "account_id": playerID
+                }),
             200
         )
     except Exception as e:
@@ -237,28 +268,36 @@ def sql_argolia_sign_in(username, pin):
         result = cursor.fetchone()
         print("Check attendance result:",result)
         if result is not None:
-            return sql_argolia_update_token(result)
+            return sql_argolia_update_token(result["access_token"],result["account_id"])
+        else:
+            return (json.dumps({ # Emulate Mojang errors
+                "error": "ForbiddenOperationException",
+                "errorMessage": "Invalid credentials. Invalid username or password."
+            }),403)
     except Exception as e:
-        print("Attendance Insert failed, Error:", e)
-        return False
+        print("Failed to sign in, Error:", e)
+        return (json.dumps({ # Emulate Mojang errors
+                "error": "ForbiddenOperationException",
+                "errorMessage": "Invalid credentials. Invalid username or password."
+            }),403)
 
 def sql_argolia_update_token(old_token, account_id):
     global connection
     connection.ping(reconnect=True)
     cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
     query = "update argolia_accounts set access_token=%s where account_id=%s and access_token=%s;"
-    
+    token = generateAccessToken()
     try:
-        cursor.execute(query, (generateAccessToken(),account_id,old_token))
+        cursor.execute(query, (token,account_id,old_token))
         connection.commit()
         if cursor.rowcount > 0:
-            return (json.dumps({"token":cursor.fetchone(),"account_id":account_id,"success": True}),200)
+            return (json.dumps({"token":token,"account_id":account_id,"success": True}),200)
         else:
-            return (json.dumps({"success": False}),200)
+            return (json.dumps({"error": "ForbiddenOperationException"}),403)
             
     except Exception as e:
         print("sql_argolia_update_token failed, Error:", e)
-        return (json.dumps({"success": False}),200)
+        return (json.dumps({"success": False}),400)
 
 def sql_argolia_check_username(username):
     global connection
@@ -275,38 +314,50 @@ def sql_argolia_check_username(username):
         print("sql_argolia_check_username failed, Error:", e)
         return (json.dumps({"success": False}),200)
 
+def sql_argolia_lookup_uuid(accountID):
+    global connection
+    connection.ping(reconnect=True)
+    cursor = connection.cursor()
+    query = "SELECT minecraft_username FROM argolia_accounts WHERE account_id=%s;"
+    
+    try:
+        cursor.execute(query, (accountID,))
+        data = cursor.fetchone()
+        if data != None:
+            return (json.dumps({"username":data[0]}),200)
+        else:
+            return (json.dumps({"username": None}),200)
+            
+    except Exception as e:
+        print("sql_argolia_lookup_uuid failed, Error:", e)
+        return (json.dumps({"username": None}),500)
+
 def sql_argolia_validate_access_token(account_id, access_token):
     global connection
     connection.ping(reconnect=True)
-    cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
-    query = "select access_token,account_id from argolia_accounts where account_id=%s and access_token=%s"
+    cursor = connection.cursor()
+    query = "select count(account_id) from argolia_accounts where account_id=%s and access_token=%s"
     
     try:
         cursor.execute(query, (account_id,access_token,))
-        result = cursor.fetchone()
-        print("Check attendance result:",result)
-        if result is not None:
-            return sql_argolia_update_token(result)
+        result = cursor.fetchone()[0]
+        print("Validate token result:",result)
+        return (json.dumps({"valid":result==1}),200)
     except Exception as e:
-        print("Attendance Insert failed, Error:", e)
-        return False
+        print("Token validation failed failed, Error:", e)
+        return ({"valid":False},500)
 
 def check_attendance(full_name):
     global connection
     connection.ping(reconnect=True)
     cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
-    query = "select * from attendance_record where arrival_time >= DATE_ADD(CURDATE(), INTERVAL -1 DAY) and full_name = %s order by arrival_time DESC;"
+    query = "select * from attendance_record where DATE(arrival_time) LIKE DATE(CURDATE()) and full_name = %s order by arrival_time DESC;"
     
     try:
         cursor.execute(query, (full_name))
         result = cursor.fetchone()
         print("Check attendance result:",result)
         if result is not None:
-            seconds_since_midnight = (datetime.datetime.now() - datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
-            seconds_since_midnight_arrival = (result["arrival_time"] - result["arrival_time"].replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
-            if seconds_since_midnight < seconds_since_midnight_arrival:
-                # Impossible situation, stops the un-needed warnings here
-                return False
             return {
                 "id": result["attendance_id"],
                 "full_name": result["full_name"],

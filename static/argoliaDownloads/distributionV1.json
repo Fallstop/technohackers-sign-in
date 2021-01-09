@@ -1,0 +1,55 @@
+{
+    "version": "1.1.0",
+    "discord": {
+        "clientId": "683228185076301837",
+        "smallImageText": "Technocraft",
+        "smallImageKey": "seal-circle"
+    },
+    "java": {
+        "oracle": "http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html"
+    },
+    "rss": "",
+    "servers": [
+        {
+            "id": "Argolia-1.16.3",
+            "name": "Argolia Server",
+            "description": "The offical argolia server.",
+            "icon": "https://i.imgur.com/q4rgk1X.jpg",
+            "version": "0.0.1",
+            "address": "mc.qrl.nz:25565",
+            "minecraftVersion": "1.16.3",
+            "discord": {
+                "shortId": "TC server",
+                "largeImageText": "Technocraft Discord Server",
+                "largeImageKey": "server-prod"
+            },
+            "mainServer": true,
+            "autoconnect": true,
+            "modules": [
+                {
+                    "id": "net.minecraftforge:forge:1.16.3-34.1.0",
+                    "name": "Minecraft Forge",
+                    "type": "ForgeHosted",
+                    "artifact": {
+                        "size": 2244547,
+                        "MD5": "6459963d6b4d7a97bbd9772b22df8abc",
+                        "url": "http://localhost:5000/static/argoliaDownloads/forge-1.16.3-34.1.0-universal.jar"
+                    }
+                },
+                {
+                    "id": "net.optifine:optifine:1.16.3_HD_U_G5",
+                    "name": "Optifine",
+                    "type": "ForgeMod",
+                    "required": {
+                        "value": false
+                    },
+                    "artifact": {
+                        "size": 5766201,
+                        "MD5": "151ef269a78e80a74a3e3493120225fa",
+                        "url": "http://localhost:5000/static/argoliaDownloads/OptiFine_1.16.3_HD_U_G5.jar"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -76,7 +76,7 @@ function signInPerson(nameOfPerson, signedUp, force) {
                 $("#askArgolia").modal('show');
                 $("#askArgolia").focus();
                 console.log($("#askArgolia"));
-                clearScreen()
+                
                 
             }
 
@@ -122,6 +122,11 @@ function clearScreen() {
         $('#search-results-container').html("");
     }
     $('#search-input').focus();
+    $("#askArgolia").modal('hide')
+    $("#askArgoliaUsername").modal('hide');
+    $("#minecraftUsernameInput").removeClass("is-valid")
+    $("#minecraftUsernameInput").removeClass("is-invalid")
+    $("#minecraftUsernameInput").val("")
     restartTimer();
 }
 
@@ -134,6 +139,7 @@ function checkArgolia() {
           });
     } else {
         promptSuccessfulSignIn()
+        $("#askArgolia").modal('hide')
     }
 }
 
@@ -246,7 +252,7 @@ function undoSignIn() {
             error: function(response) {
                 $.notify({
                     // options
-                    message: "Failed to undo sign in to server, response: " + response.status
+                    message: "Failed to cancel attendance" + userToUndo[1] + ", response: " + response.status
                 }, {
                     // settings
                     type: 'danger',
@@ -357,4 +363,5 @@ function promptSuccessfulSignIn() {
         type: 'success',
         delay: 1000
     });
+    clearScreen()
 }
