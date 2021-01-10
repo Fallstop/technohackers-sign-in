@@ -317,21 +317,34 @@
                 "MD5": "1f0c4faa50360623e49b9c2522edc602",
                 "url": "http://localhost:5000/static/argoliaDownloads/repo/lib/org/spongepowered/mixin/0.8.2/mixin-0.8.2.jar"
               }
-            },
-            {
-              "id": "net.optifine:optifine:1.16.3_HD_U_G5@jar",
-              "name": "OptiFine",
-              "type": "ForgeMod",
-              "artifact": {
-                "size": 5766201,
-                "url": "http://localhost:5000/static/argoliaDownloads/servers/argolia-1.16.3/forgemods/optionalon/OptiFine_1.16.3_HD_U_G5.jar",
-                "MD5": "151ef269a78e80a74a3e3493120225fa"
-              },
-              "required": {
-                "value": false
-              }
             }
           ]
+        },
+        {
+          "id": "net.optifine:optifine:1.16.3_HD_U_G4@jar",
+          "name": "OptiFine",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 5805740,
+            "url": "http://localhost:5000/static/argoliaDownloads/OptiFine_1.16.3_HD_U_G4.jar",
+            "MD5": "598045038c55fdc2b65ce975733bac0d"
+          },
+          "required": {
+            "value": false
+          }
+        },
+        {
+          "id": "io.github.zekerzhayard:optiforge:0.3.5@jar",
+          "name": "OptiForge",
+          "type": "ForgeMod",
+          "artifact": {
+            "size": 185420,
+            "url": "http://localhost:5000/static/argoliaDownloads/OptiForge-MC1.16.3-0.3.5.jar",
+            "MD5": "ca85baf5bb5d8bcd065aa6c2aa7fb300"
+          },
+          "required": {
+            "value": false
+          }
         }
       ]
     }

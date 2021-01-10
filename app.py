@@ -167,6 +167,7 @@ def argolia_update_token():
     if data:
         return sql_argolia_update_token(data["old-token"],data["account-id"])
     else:
+        print("Not valid json",request.get_json()["old-token"])
         return ("Invalid Json {}".format(request.data),400)
 
 @app.route('/argolia/sign-in',methods=['POST'])
