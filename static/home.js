@@ -10,7 +10,7 @@ var repeatAttendPersonDetails;
 
 var timeoutDelay = 60000;
 
-var timeoutID = window.setTimeout(clearScreen,timeoutDelay);
+var timeoutID = window.setTimeout(clearScreen, timeoutDelay);
 
 var fuse;
 
@@ -22,13 +22,13 @@ function loadNames() {
     $.ajax({
         url: '/getnames',
         type: 'GET',
-        success: function(response) {
+        success: function (response) {
             console.log(response);
             nameList = response;
             fuse = new Fuse(response, options);
             $('#loading_icon').hide();
         },
-        error: function(response) {
+        error: function (response) {
             $.notify({
                 // options
                 message: "Failed to get list of names from server, response: " + response.status + "<br>Trying again in 2s."
@@ -63,7 +63,7 @@ function signInPerson(nameOfPerson, signedUp, force) {
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),
-        success: function(response) {
+        success: function (response) {
             console.log("Response: ", response);
             if (response["attendance_warning"]) {
                 repeatAttendPersonDetails = response
@@ -76,12 +76,12 @@ function signInPerson(nameOfPerson, signedUp, force) {
                 $("#askArgolia").modal('show');
                 $("#askArgolia").focus();
                 console.log($("#askArgolia"));
-                
-                
+
+
             }
 
         },
-        error: function(response) {
+        error: function (response) {
             $.notify({
                 // options
                 message: "Failed to send sign in to server, response: " + response.status
@@ -136,7 +136,7 @@ function checkArgolia() {
         $("#askArgolia").modal('hide')
         $("#askArgoliaUsername").modal({
             backdrop: 'static'
-          });
+        });
     } else {
         promptSuccessfulSignIn()
         $("#askArgolia").modal('hide')
@@ -151,10 +151,10 @@ function checkUsernameAvailability(username) {
         data: JSON.stringify({
             "username": username
         }),
-        success: function(response) {
+        success: function (response) {
             result = JSON.parse(response)
-            console.log(result["available"],result)
-            if (result["available"]){
+            console.log(result["available"], result)
+            if (result["available"]) {
                 $("#minecraftUsernameInput").addClass("is-valid")
                 $("#minecraftUsernameInput").removeClass("is-invalid")
                 $("#minecraftUsernameInput").val("")
@@ -164,7 +164,7 @@ function checkUsernameAvailability(username) {
                 $("#minecraftUsernameInput").removeClass("is-valid")
                 $("#minecraftUsernameInput").addClass("is-invalid")
             }
-                
+
         }
     })
 }
@@ -183,15 +183,87 @@ function createArgoliaAccount(username) {
             "username": username,
             "full_name": currentlyProcessingName
         }),
-        success: function(response) {
-            promptSuccessfulSignIn()
+        success: function (response) {
+            console.log("Response: ",response)
+            pin = JSON.parse(response)["pin"]
+            promptSuccessfulSignIn("Please pickup the printing receipt!")
+            var printWindow = window.open('', '', 'height=200,width=400'); 
+            printWindow.document.write(`
+            <!DOCTYPE html>
+            <html lang="en" >
+            <head>
+                <meta charset="utf-8">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
+                    .content {
+                        text-align: center;
+                        font-family: 'Open Sans', sans-serif;
+                        font-size: 3.4mm;
+                        filter: none;
+                        padding: 2mm 4mm 2mm 0;
+                        margin-left: -6mm;
+                    }
+                    .title {
+                        font-size: 7mm
+                    }
+                    .subtitle {
+                        font-size: 5mm;
+                    }
+                    @page {
+                        margin: 0;
+                    }
+                    @media print {
+                        .content {
+                            width: 55mm !important;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="content">
+                    <div class="title">ARGOLIA</div>
+                    <div class="description">
+                    Welcome<br>
+                    ${currentlyProcessingName}<br>
+                    This is some key information about the event, <b>don't lose it!</b><br>
+                    </div>
+                    <div class="subtitle">Timetable</div>
+                    <p>
+                    Opening: 8:30 AM<br>
+                    Event Start: 9:00 AM<br>
+                    Lunch: 12:45 PM<br>
+                    Event Finish: 5:00 PM<br>
+                    Closing: 5:45 PM<br>
+                    </p>
+                    <div class="subtitle">Wifi</div>
+                    <p>
+                    SSID: Questionable<br>
+                    Password: noquestions<br>
+                    </p>
+                    <div class="subtitle">Minecraft Account</div>
+                    <p>
+                    This will be your credentials for when you sign into Argolia:<br>
+                    Username: ${username}<br>
+                    Pin: ${pin}<br>
+                    </p>
+                </div>
+            </body>
+            </html>
+            `);
+            printWindow.print();
+            printWindow.onafterprint = function(){
+                console.log("Printing completed...");
+                printWindow.close();
+            }
+
         },
-        error: function(response) {
-            console.log(response)
+        error: function (response) {
             if (response.status == 500) {
                 $.notify({
                     // options
-                    message: "Failed to create account, probably because you have already made an account"
+                    message: "Failed to create account, please find a staff member, response: " + response
                 }, {
                     // settings
                     type: 'danger',
@@ -238,7 +310,7 @@ function undoSignIn() {
             type: 'DELETE',
             contentType: 'application/json',
             data: JSON.stringify({ "id": userToUndo[0] }),
-            success: function(response) {
+            success: function (response) {
                 $.notify({
                     // options
                     message: 'Canceled attendance of <strong>' + userToUndo[1] + '</strong>'
@@ -249,7 +321,7 @@ function undoSignIn() {
                 });
                 rollbackList.pop();
             },
-            error: function(response) {
+            error: function (response) {
                 $.notify({
                     // options
                     message: "Failed to cancel attendance" + userToUndo[1] + ", response: " + response.status
@@ -273,11 +345,11 @@ function undoSignIn() {
 
 }
 
-$(document).ready(function() {
+$(document).ready(function () {
     $("#search-input").val("");
     $('#search-input').focus();
     loadNames();
-    $('#search-input').keyup(function(e) {
+    $('#search-input').keyup(function (e) {
         console.log(e);
         if (e.code != "Enter") {
             console.log($('#search-input').val());
@@ -296,7 +368,7 @@ $(document).ready(function() {
             }
         }
     });
-    $("#attendingArgoliaCheckBox").change(function() {
+    $("#attendingArgoliaCheckBox").change(function () {
         if (this.checked) {
             $("#argoliaNextButton").html("Next")
         } else {
@@ -304,29 +376,29 @@ $(document).ready(function() {
         }
     });
 
-    $('#guest-name-input').keyup(function(e) {
+    $('#guest-name-input').keyup(function (e) {
         if (e.code == 'Enter') {
             guestSignIn();
         }
     })
-    $('#guest-name-input').keyup(function(e) {
+    $('#guest-name-input').keyup(function (e) {
         if (e.code == 'Enter') {
             guestSignIn();
         }
     })
-    $('#guest-name-input').keyup(function(e) {
+    $('#guest-name-input').keyup(function (e) {
         if (e.code == 'Enter') {
             guestSignIn();
         }
     })
-    $(document).on('click', '.person', function(event) {
+    $(document).on('click', '.person', function (event) {
         if (this.id != "guest") {
             signInPerson(this.id.substring(7), true, false);
         } else {
             triggerGuestSignIn();
         }
     });
-    $(document).on('keypress', '.person', function(e) {
+    $(document).on('keypress', '.person', function (e) {
         if (e.code == "Enter") {
             if (this.id != "guest") {
                 signInPerson(this.id.substring(7), true, false);
@@ -336,28 +408,28 @@ $(document).ready(function() {
         }
 
     });
-    $(document).on("keydown", "#argoliaUsernameForm", function(event) {
+    $(document).on("keydown", "#argoliaUsernameForm", function (event) {
         if (event.key == "Enter") {
             submitArgoliaUsername()
             return false;
         }
         return true;
     });
-    $(document).on("keydown", "#askArgolia", function(event) {
+    $(document).on("keydown", "#askArgolia", function (event) {
         if (event.key == "Enter") {
             checkArgolia()
         }
     });
 
-    $(document).on('click keypress',restartTimer);
+    $(document).on('click keypress', restartTimer);
 
 })
 
-function promptSuccessfulSignIn() {
+function promptSuccessfulSignIn(customText = "") {
     console.log("Successful signin")
     $.notify({
         // options
-        message: 'Signed in as <strong>' + currentlyProcessingName + '</strong>'
+        message: `Signed in as <strong>${currentlyProcessingName}</strong>${customText}`
     }, {
         // settings
         type: 'success',
