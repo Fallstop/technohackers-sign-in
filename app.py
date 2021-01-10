@@ -240,13 +240,11 @@ def sql_argolia_create_account(full_name,username,pin,access_token):
     global connection
     connection.ping(reconnect=True)
     cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
-    query = "insert into qrl_membership_db.argolia_accounts (account_id, full_name, minecraft_username, minecraft_pin, access_token) values (%s,%s,%s,%s,%s)"
+    query = "REPLACE into qrl_membership_db.argolia_accounts (account_id, full_name, minecraft_username, minecraft_pin, access_token) values (%s,%s,%s,%s,%s)"
     
     try:
         cursor.execute(query, (playerID,full_name, username, pin, access_token))
         connection.commit()
-        id = cursor.lastrowid
-        print("Account ID:",id)
         return (
             json.dumps({
                 "pin": pin,
@@ -385,14 +383,14 @@ def get_uuid(username):
         response = http_conn.getresponse().read().decode("utf-8")
 
         if (not response): # No response & no timestamp
-            return uuid.uuid4()
+            return str(uuid.uuid4()).replace("-","")
 
         json_data = json.loads(response)
         try:
             playerUuid = json_data['id']
         except KeyError as e:
             print("KeyError raised:", e)
-            playerUuid = uuid.uuid4()
+            playerUuid = str(uuid.uuid4()).replace("-","")
 
         return playerUuid
 

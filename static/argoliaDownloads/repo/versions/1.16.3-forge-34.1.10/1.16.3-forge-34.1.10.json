@@ -4,9 +4,9 @@
         "Our efforts are supported by ads from the download page.",
         "If you MUST automate this, please consider supporting the project through https://www.patreon.com/LexManos/"
     ],
-    "id": "1.16.3-forge-34.1.0",
-    "time": "2020-09-24T07:07:35+00:00",
-    "releaseTime": "2020-09-24T07:07:35+00:00",
+    "id": "1.16.3-forge-34.1.10",
+    "time": "2020-10-05T14:43:49+00:00",
+    "releaseTime": "2020-10-05T14:43:49+00:00",
     "type": "release",
     "mainClass": "cpw.mods.modlauncher.Launcher",
     "inheritsFrom": "1.16.3",
@@ -18,7 +18,7 @@
             "--launchTarget",
             "fmlclient",
             "--fml.forgeVersion",
-            "34.1.0",
+            "34.1.10",
             "--fml.mcVersion",
             "1.16.3",
             "--fml.forgeGroup",
@@ -29,13 +29,13 @@
     },
     "libraries": [
         {
-            "name": "net.minecraftforge:forge:1.16.3-34.1.0",
+            "name": "net.minecraftforge:forge:1.16.3-34.1.10",
             "downloads": {
                 "artifact": {
-                    "path": "net/minecraftforge/forge/1.16.3-34.1.0/forge-1.16.3-34.1.0.jar",
+                    "path": "net/minecraftforge/forge/1.16.3-34.1.10/forge-1.16.3-34.1.10.jar",
                     "url": "",
-                    "sha1": "0a6df450ccb26ad0fd119d5c6faaa4fb0cd889cf",
-                    "size": 197523
+                    "sha1": "7ef87f22a4588faa54d6e896ddb0fdd6b79d89a0",
+                    "size": 197575
                 }
             }
         },
@@ -271,13 +271,13 @@
             }
         },
         {
-            "name": "org.spongepowered:mixin:0.8.1",
+            "name": "org.spongepowered:mixin:0.8.2",
             "downloads": {
                 "artifact": {
-                    "path": "org/spongepowered/mixin/0.8.1/mixin-0.8.1.jar",
-                    "url": "https://files.minecraftforge.net/maven/org/spongepowered/mixin/0.8.1/mixin-0.8.1.jar",
-                    "sha1": "3099ac85bce29d37a22d3561073d01eb99b0cf4b",
-                    "size": 935195
+                    "path": "org/spongepowered/mixin/0.8.2/mixin-0.8.2.jar",
+                    "url": "https://files.minecraftforge.net/maven/org/spongepowered/mixin/0.8.2/mixin-0.8.2.jar",
+                    "sha1": "1cf212283d26f706fd3074318870bebd14d2a9ed",
+                    "size": 935252
                 }
             }
         }
