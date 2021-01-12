@@ -186,7 +186,7 @@ function createArgoliaAccount(username) {
         success: function (response) {
             console.log("Response: ",response)
             pin = JSON.parse(response)["pin"]
-            promptSuccessfulSignIn("Please pickup the printing receipt!")
+            promptSuccessfulSignIn("<br>Please pickup the printing receipt!")
             var printWindow = window.open('', '', 'height=200,width=400'); 
             printWindow.document.write(`
             <!DOCTYPE html>
@@ -196,20 +196,17 @@ function createArgoliaAccount(username) {
                 <meta http-equiv="X-UA-Compatible" content="IE=edge">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
                     .content {
                         text-align: center;
-                        font-family: 'Open Sans', sans-serif;
-                        font-size: 3.4mm;
+                        font-size: 5mm;
                         filter: none;
-                        padding: 2mm 4mm 2mm 0;
-                        margin-left: -6mm;
+                        padding: 2mm 4mm;
                     }
                     .title {
-                        font-size: 7mm
+                        font-size: 9mm
                     }
                     .subtitle {
-                        font-size: 5mm;
+                        font-size: 7mm;
                     }
                     @page {
                         margin: 0;
@@ -232,19 +229,20 @@ function createArgoliaAccount(username) {
                     <div class="subtitle">Timetable</div>
                     <p>
                     Opening: 8:30 AM<br>
-                    Event Start: 9:00 AM<br>
+                    The Beginning: 9:00 AM<br>
+                    Morning Tea: 10:30 AM<br>
                     Lunch: 12:45 PM<br>
-                    Event Finish: 5:00 PM<br>
-                    Closing: 5:45 PM<br>
+                    Event Finish: 4:30 PM<br>
+                    Closing: 5:30 PM<br>
                     </p>
                     <div class="subtitle">Wifi</div>
                     <p>
-                    SSID: Questionable<br>
+                    SSID: Questionable_5G<br>
                     Password: noquestions<br>
                     </p>
                     <div class="subtitle">Minecraft Account</div>
                     <p>
-                    This will be your credentials for when you sign into Argolia:<br>
+                    This will be your credentials for when you sign into Argolia:<br><br>
                     Username: ${username}<br>
                     Pin: ${pin}<br>
                     </p>
@@ -252,12 +250,18 @@ function createArgoliaAccount(username) {
             </body>
             </html>
             `);
-            printWindow.print();
-            printWindow.onafterprint = function(){
+            printWindow.addEventListener('afterprint', (event) => {
                 console.log("Printing completed...");
+                
                 printWindow.close();
-            }
-
+                window.focus()
+              });
+              setTimeout(function () {
+                  console.log("Timeout yes")
+                printWindow.close(); // Replace this line with your own 'afterprint' logic.
+            }, 3000);
+            printWindow.print();
+            
         },
         error: function (response) {
             if (response.status == 500) {
